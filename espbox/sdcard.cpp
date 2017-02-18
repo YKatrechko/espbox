@@ -25,7 +25,7 @@
 #ifdef SDCARD_FEATURE
 #include <SPI.h>
 #include <SdFat.h>
-//#include <FS.h>
+
 const uint8_t SD_CHIP_SELECT = SS;
 #endif
 
@@ -34,10 +34,9 @@ const uint8_t SD_CHIP_SELECT = SS;
 
 bool SDCARD::_sdinit = false; //
 bool SDCARD::_volinit = false; //
+
 SdFat sd;
-//Sd2Card* card;
-//SdVolume* volume;
-//SdFile* root;
+
 
 bool SDCARD::hasSD()
 {
@@ -97,14 +96,10 @@ String SDCARD::jsonDirectory(String &path, String &sstatus)
   LOG("JSON File\r\n");
   String jsonfile = "{\"files\":[" ;
   if (_sdinit) {
-    bool reschdir = sd.chdir(string2char(path), true);
+    bool reschdir = sd.chdir(string2char(path));
 
     LOG("path - ")
-    LOG(string2char(path))
-    char bufs[50];
-    sd.vwd()->getName(bufs, 50);
-    LOG("\r\nsd.vwd() - ")
-    LOG(bufs)
+    LOG(path)
     LOG("\r\n")
 
     if (reschdir) {
@@ -171,7 +166,7 @@ bool SDCARD::rmFile(String &filename)
 bool SDCARD::rmDirectory(String &path)
 {
   if (!_sdinit) return false;
-  if (!sd.chdir(true)) LOG("chdir failed for /\r\n");
+  if (!sd.chdir()) LOG("chdir failed for /\r\n");
   bool res = sd.rmdir(string2char(path));
   LOG("remove dir \"");
   LOG(path);
@@ -182,7 +177,7 @@ bool SDCARD::rmDirectory(String &path)
 bool SDCARD::mkDirectory(String &path)
 {
   if (!_sdinit) return false;
-  if (!sd.chdir(true)) LOG("chdir failed for /\r\n");
+  if (!sd.chdir()) LOG("chdir failed for /\r\n");
   bool res = sd.mkdir(string2char(path));
   LOG("create \"");
   LOG(path);
@@ -194,8 +189,8 @@ bool SDCARD::mkDirectory(String &path)
 bool SDCARD::readFile(String filename, File &file)
 {
   if (!_sdinit) return false;
-  if (!sd.chdir(true)) LOG("chdir failed for /\r\n");
-  
+  if (!sd.chdir()) LOG("chdir failed for /\r\n");
+
   bool res = sd.exists(string2char(filename)) && file.open(string2char(filename), O_READ);
   LOG("read \"");
   LOG(filename);
@@ -204,6 +199,26 @@ bool SDCARD::readFile(String filename, File &file)
   //      myFile.close();
   return res;
 }
+
+
+void SDCARD::append_file(String filename, String line)
+{
+  LOG("Appending to File: \"");
+  LOG(filename);
+  ofstream sdout(string2char(filename), ios::out | ios::app);
+  if (!sdout) LOG("\" open failed, ")
+    else LOG("\" open success, ");
+
+  // use int() so byte will print as decimal number
+  sdout << "millis = " << millis() << " ";
+  sdout << "line - " << string2char(line) << ". " << endl;
+
+  // close the stream
+  sdout.close();
+  if (!sdout) LOG("append data failed\r\n")
+    else LOG("append data success\r\n");
+}
+
 #endif
 
 /////////////////

@@ -54,6 +54,9 @@ DNSServer dnsServer;
 #include <ESP8266NetBIOS.h>
 #endif
 
+char *letters = "abcdefghijklmnopqrstuvwxyz0123456789";
+unsigned long previousMillis;
+
 void setup()
 {
   bool breset_config = false;
@@ -214,5 +217,26 @@ void loop()
   ///    BRIDGE::processFromSerial2TCP();
   if (web_interface->restartmodule) {
     CONFIG::esp_restart();
+  }
+
+  unsigned long currentMillis = millis();
+  if (currentMillis - previousMillis >= 1000) {
+    //    previousMillis = currentMillis;
+    String randString = "";
+    int numBytes = random(0, 20);
+    for (int i = 0; i < numBytes; i++)
+      randString += letters[random(0, 36)];
+
+    randString += " | ";
+    randString += String(previousMillis);
+    randString += " - ";
+    randString += String(currentMillis);
+
+    LOG("Write randString \"")
+    LOG(randString)
+    LOG("\"\r\n")
+    
+    SDCARD::append_file("/data/logfile.txt", randString);
+    previousMillis = currentMillis;
   }
 }

@@ -35,7 +35,7 @@ class SDCARD
     static bool rmDirectory(String &path);
     static bool mkDirectory(String &path);
     static bool readFile(String filename, File &file);
-
+    static void append_file(String filename, String line);
 #endif
   private:
     static bool _sdinit;
