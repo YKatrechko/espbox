@@ -133,17 +133,24 @@ String SDCARD::jsonDirectory(String &path, String &sstatus)
     }
   }
 
-  //  float freeSpace = 0.000512* sd.vol()->freeClusterCount() *sd.vol()->blocksPerCluster();
+  uint32_t totalSizeMB = sd.card()->cardSize() * 512;
+  uint32_t freeSizeMB = sd.vol()->freeClusterCount() * sd.vol()->blocksPerCluster() * 512;
   //  uint32_t freeKB = sd.vol()->freeClusterCount()*sd.vol()->blocksPerCluster()/2;
+  uint32_t usedSizeMB = totalSizeMB - freeSizeMB;
 
+  LOG("totalSizeMB: ")
+  LOG(String(totalSizeMB))
+  LOG(", freeSizeMB: ")
+  LOG(String(freeSizeMB))
+  LOG("\r\n");
+  
   jsonfile += "],\"path\":\"";
   jsonfile += path + "\",\"mode\":\"serial\",\"status\":\"";
-  jsonfile += sstatus + "\",\"total\":\"";
-  jsonfile += "-1";
-  jsonfile += "\",\"used\":\"";
-  jsonfile += "-1";
-  jsonfile += "\",\"occupation\":\"";
-  jsonfile +=  "-1";
+  jsonfile += sstatus + "\",";
+  jsonfile += "\"total\":\"" + CONFIG::formatBytes(totalSizeMB) + "\",";
+  jsonfile += "\"used\":\"" + CONFIG::formatBytes(usedSizeMB) + "\",";
+  jsonfile.concat(F("\"occupation\":\""));
+  jsonfile += CONFIG::intTostr(100 * usedSizeMB / totalSizeMB);
   jsonfile += "\"";
   jsonfile += "}";
 
