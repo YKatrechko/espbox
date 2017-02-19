@@ -695,16 +695,10 @@ void CONFIG::print_config(tpipe output)
   } else {
     BRIDGE::println(F("Error reading web port"), output);
   }
+  
   BRIDGE::print(F("Data port: "), output);
-#ifdef TCP_IP_DATA_FEATURE
-  if (CONFIG::read_buffer(EP_DATA_PORT,  (byte *)&ibuf , INTEGER_LENGTH)) {
-    BRIDGE::println(String(ibuf).c_str(), output);
-  } else {
-    BRIDGE::println(F("Error reading data port"), output);
-  }
-#else
   BRIDGE::println(F("Disabled"), output);
-#endif
+
   if (CONFIG::read_byte(EP_REFRESH_PAGE_TIME, &bbuf )) {
     BRIDGE::print(F("Web page refresh time: "), output);
     BRIDGE::println(String(byte(bbuf)).c_str(), output);
@@ -748,12 +742,7 @@ void CONFIG::print_config(tpipe output)
 #else
   BRIDGE::println(F("Disabled"), output);
 #endif
-  BRIDGE::print(F("NetBios: "), output);
-#ifdef NETBIOS_FEATURE
-  BRIDGE::println(F("Enabled"), output);
-#else
-  BRIDGE::println(F("Disabled"), output);
-#endif
+
   BRIDGE::print(F("mDNS: "), output);
 #ifdef MDNS_FEATURE
   BRIDGE::println(F("Enabled"), output);

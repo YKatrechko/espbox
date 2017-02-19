@@ -1,27 +1,9 @@
 /*
-    This file is part of ESP3D Firmware for 3D printer.
-
-    ESP3D Firmware for 3D printer is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    ESP3D Firmware for 3D printer is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
     You should have received a copy of the GNU General Public License
     along with this Firmware.  If not, see <http://www.gnu.org/licenses/>.
 
     This firmware is using the standard arduino IDE with module to support ESP8266:
     https://github.com/esp8266/Arduino from Bootmanager
-
-    Latest version of the code and documentation can be found here :
-    https://github.com/luc-github/ESP3D
-
-    Main author: luc lebosse
-
 */
 //be sure correct IDE and settings are used for ESP8266
 #ifndef ARDUINO_ARCH_ESP8266
@@ -29,13 +11,16 @@
 #endif
 #include <EEPROM.h>
 #include "config.h"
+#ifdef MSP_LOG_FEATURE
+#include "global.h"
+#endif
 #include "wifi.h"
 #include "bridge.h"
 #include "webinterface.h"
 #ifdef SDCARD_FEATURE
 #include "sdcard.h"
 #endif
-///#include "command.h"
+
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
@@ -50,9 +35,7 @@ DNSServer dnsServer;
 #ifdef SSDP_FEATURE
 #include <ESP8266SSDP.h>
 #endif
-#ifdef NETBIOS_FEATURE
-#include <ESP8266NetBIOS.h>
-#endif
+
 
 char *letters = "abcdefghijklmnopqrstuvwxyz0123456789";
 unsigned long previousMillis;
@@ -62,9 +45,7 @@ void setup()
   bool breset_config = false;
   long baud_rate = 0;
   web_interface = NULL;
-#ifdef TCP_IP_DATA_FEATURE
-  data_server = NULL;
-#endif
+
   // init:
 #ifdef DEBUG_ESP3D
   Serial.begin(DEFAULT_BAUD_RATE);
@@ -161,24 +142,17 @@ void setup()
   }
 #endif
   web_interface->WebServer.begin();
-#ifdef TCP_IP_DATA_FEATURE
-  //start TCP/IP interface
-  data_server = new WiFiServer (wifi_config.idata_port);
-  data_server->begin();
-  data_server->setNoDelay(true);
-#endif
+
 
 #ifdef MDNS_FEATURE
   // Check for any mDNS queries and send responses
   wifi_config.mdns.addService("http", "tcp", wifi_config.iweb_port);
 #endif
-#if defined(SSDP_FEATURE) || defined(NETBIOS_FEATURE)
+#ifdef SSDP_FEATURE
   String shost;
   if (!CONFIG::read_string(EP_HOSTNAME, shost , MAX_HOSTNAME_LENGTH)) {
     shost = wifi_config.get_default_hostname();
   }
-#endif
-#ifdef SSDP_FEATURE
   String stmp;
   SSDP.setSchemaURL("description.xml");
   SSDP.setHTTPPort( wifi_config.iweb_port);
@@ -194,9 +168,6 @@ void setup()
   SSDP.setDeviceType("upnp:rootdevice");
   SSDP.begin();
 #endif
-#ifdef NETBIOS_FEATURE
-  NBNS.begin(shost.c_str());
-#endif
   LOG("Setup Done\r\n");
 }
 
@@ -204,6 +175,11 @@ void setup()
 //main loop
 void loop()
 {
+#ifdef MSP_LOG_FEATURE
+
+
+#endif
+  
 #ifdef CAPTIVE_PORTAL_FEATURE
   if (WiFi.getMode() != WIFI_STA ) {
     dnsServer.processNextRequest();
@@ -211,13 +187,11 @@ void loop()
 #endif
   //web requests
   web_interface->WebServer.handleClient();
-#ifdef TCP_IP_DATA_FEATURE
-  BRIDGE::processFromTCP2Serial();
-#endif
-  ///    BRIDGE::processFromSerial2TCP();
+
   if (web_interface->restartmodule) {
     CONFIG::esp_restart();
   }
+
 
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= 1000) {
@@ -236,7 +210,8 @@ void loop()
     LOG(randString)
     LOG("\"\r\n")
     
-    SDCARD::append_file("/data/logfile.txt", randString);
+    SDCARD::append_file("/logs/logfile.txt", randString);
     previousMillis = currentMillis;
   }
+  
 }

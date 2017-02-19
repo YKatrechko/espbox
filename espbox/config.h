@@ -40,9 +40,6 @@
 //SSDD_FEATURE: this feature is a discovery protocol, supported on Windows out of the box
 //#define SSDP_FEATURE
 
-//NETBIOS_FEATURE: this feature is a discovery protocol, supported on Windows out of the box
-//#define NETBIOS_FEATURE
-
 //CAPTIVE_PORTAL_FEATURE: In SoftAP redirect all unknow call to main page
 //#define CAPTIVE_PORTAL_FEATURE
 
@@ -79,13 +76,13 @@
 #define STATUS_MSG_FEATURE
 
 //TEMP_MONITORING_FEATURE : catch the specific answer and store it to variable
-#define TEMP_MONITORING_FEATURE
+//#define TEMP_MONITORING_FEATURE
 //SPEED_MONITORING_FEATURE : catch the specific answer and store it to variable
-#define SPEED_MONITORING_FEATURE
+//#define SPEED_MONITORING_FEATURE
 //POS_MONITORING_FEATURE : catch the specific answer and store it to variable
-#define POS_MONITORING_FEATURE
+//#define POS_MONITORING_FEATURE
 //FLOW_MONITORING_FEATURE : catch the specific answer and store it to variable
-#define FLOW_MONITORING_FEATURE
+//#define FLOW_MONITORING_FEATURE
 
 // SDCARD_FEATURE
 #define SDCARD_FEATURE
@@ -95,8 +92,8 @@
 #define FS_NO_GLOBALS
 #endif
 #endif
-#include <FS.h>
 
+#include <FS.h>
 
 //Serial rx buffer size is 256 but can be extended
 #define SERIAL_RX_BUFFER_SIZE 512
@@ -168,9 +165,6 @@ typedef enum {
   NO_PIPE = 0,
   SERIAL_PIPE = 2,
   SERIAL1_PIPE = 3,
-#ifdef TCP_IP_DATA_FEATURE
-  TCP_PIPE = 4,
-#endif
   WEB_PIPE = 5
 } tpipe;
 

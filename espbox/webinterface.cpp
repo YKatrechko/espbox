@@ -1101,16 +1101,10 @@ void handle_web_interface_configSys()
     //is there a correct list of values?
     if (web_interface->WebServer.hasArg("BAUD_RATE")
         && web_interface->WebServer.hasArg("SLEEP_MODE")
-#ifdef TCP_IP_DATA_FEATURE
-        && web_interface->WebServer.hasArg("DATAPORT")
-#endif
         && web_interface->WebServer.hasArg("WEBPORT")) {
       //is each value correct ?
       ibaud  = web_interface->WebServer.arg("BAUD_RATE").toInt();
       iweb_port  = web_interface->WebServer.arg("WEBPORT").toInt();
-#ifdef TCP_IP_DATA_FEATURE
-      idata_port  = web_interface->WebServer.arg("DATAPORT").toInt();
-#endif
       bsleepmode = web_interface->WebServer.arg("SLEEP_MODE").toInt();
 
       if (!(iweb_port > 0 && iweb_port < 65001)) {
@@ -1119,14 +1113,7 @@ void handle_web_interface_configSys()
         KeysList.add(FPSTR(KEY_WEB_PORT_STATUS));
         ValuesList.add(FPSTR(VALUE_HAS_ERROR));
       }
-#ifdef TCP_IP_DATA_FEATURE
-      if (!(idata_port > 0 && idata_port < 65001)) {
-        msg_alert_error = true;
-        smsg.concat("Error: invalid port value for data port<BR>");
-        KeysList.add(FPSTR(KEY_DATA_PORT_STATUS));
-        ValuesList.add(FPSTR(VALUE_HAS_ERROR));
-      }
-#endif
+
       if (iweb_port == idata_port) {
         msg_alert_error = true;
         smsg.concat("Error: web port and data port cannot be identical<BR>");
@@ -1155,17 +1142,11 @@ void handle_web_interface_configSys()
     if (msg_alert_error != true) {
       if (!CONFIG::write_buffer(EP_BAUD_RATE, (const byte *)&ibaud, INTEGER_LENGTH)
           || !CONFIG::write_buffer(EP_WEB_PORT, (const byte *)&iweb_port, INTEGER_LENGTH)
-#ifdef TCP_IP_DATA_FEATURE
-          || !CONFIG::write_buffer(EP_DATA_PORT, (const byte *)&idata_port, INTEGER_LENGTH)
-#endif
           || !CONFIG::write_byte(EP_SLEEP_MODE, bsleepmode)) {
         msg_alert_error = true;
         smsg = FPSTR(EEPROM_NOWRITE);
       } else {
         msg_alert_success = true;
-#ifdef TCP_IP_DATA_FEATURE
-        wifi_config.iweb_port = iweb_port;
-#endif
         wifi_config.idata_port = idata_port;
         smsg = F("Changes saved to EEPROM, restarting....");
       }
@@ -3549,7 +3530,6 @@ void handle_login()
 #endif
     }
   }
-
   else { //no submit need to get data from EEPROM
     sUser = String();
     //password
@@ -3597,6 +3577,7 @@ void handle_login()
   ValuesList.clear();
 }
 #endif
+
 void handle_restart()
 {
   static const char NOT_AUTH_NF [] PROGMEM = "HTTP/1.1 301 OK\r\nLocation: /HOME\r\nCache-Control: no-cache\r\n\r\n";
@@ -3649,240 +3630,6 @@ void handle_restart()
   web_interface->restartmodule = true;
 }
 
-#define MAX_TRY 2000
-void handle_web_command_silent() {
-  if (web_interface->is_authenticated() == LEVEL_GUEST) {
-    web_interface->WebServer.send(200, "text/plain", "Not allowed, log in first!");
-    return;
-  }
-  String buffer2send = "";
-  LOG(String (web_interface->WebServer.args()))
-  LOG(" Web silent command\r\n")
-#ifdef DEBUG_ESP3D
-  int nb = web_interface->WebServer.args();
-  for (int i = 0 ; i < nb; i++) {
-    LOG(web_interface->WebServer.argName(i))
-    LOG(":")
-    LOG(web_interface->WebServer.arg(i))
-    LOG("\r\n")
-  }
-#endif
-  String cmd = "";
-  int count ;
-  if (web_interface->WebServer.hasArg("plain") || web_interface->WebServer.hasArg("commandText")) {
-    if (web_interface->WebServer.hasArg("plain")) cmd = web_interface->WebServer.arg("plain");
-    else cmd = web_interface->WebServer.arg("commandText");
-    LOG("Web Command:")
-    LOG(cmd)
-    LOG("\r\n")
-  } else {
-    LOG("invalid argument\r\n")
-    web_interface->WebServer.send(200, "text/plain", "Invalid command");
-    return;
-  }
-  //if it is for ESP module [ESPXXX]<parameter>
-  cmd.trim();
-  int ESPpos = cmd.indexOf("[ESP");
-  if (ESPpos > -1) {
-    //is there the second part?
-    int ESPpos2 = cmd.indexOf("]", ESPpos);
-    if (ESPpos2 > -1) {
-      //Split in command and parameters
-      String cmd_part1 = cmd.substring(ESPpos + 4, ESPpos2);
-      String cmd_part2 = "";
-      //is there space for parameters?
-      if (ESPpos2 < cmd.length()) {
-        cmd_part2 = cmd.substring(ESPpos2 + 1);
-      }
-      //                //if command is a valid number then execute command
-      //                if(cmd_part1.toInt()!=0) {
-      //                    COMMAND::execute_command(cmd_part1.toInt(),cmd_part2,NO_PIPE);
-      //                    web_interface->WebServer.send(200,"text/plain","ok");
-      //
-      //                }
-      //if not is not a valid [ESPXXX] command
-    }
-  } else {
-    //send command to serial as no need to transfer ESP command
-    //to avoid any pollution if Uploading file to SDCard
-    if ((web_interface->blockserial) == false) {
-      LOG("Send Command\r\n")
-      //send command
-      Serial.println(cmd);
-      web_interface->WebServer.send(200, "text/plain", "ok");
-    }
-    else web_interface->WebServer.send(200, "text/plain", "Serial is busy, retry later!");
-  }
-
-}
-void handle_web_command() {
-  if (web_interface->is_authenticated() == LEVEL_GUEST) {
-    web_interface->WebServer.send(200, "text/plain", "Not allowed, log in first!");
-    return;
-  }
-  String buffer2send = "";
-  LOG(String (web_interface->WebServer.args()))
-  LOG(" Web command\r\n")
-#ifdef DEBUG_ESP3D
-  int nb = web_interface->WebServer.args();
-  for (int i = 0 ; i < nb; i++) {
-    LOG(web_interface->WebServer.argName(i))
-    LOG(":")
-    LOG(web_interface->WebServer.arg(i))
-    LOG("\r\n")
-  }
-#endif
-  String cmd = "";
-  int count ;
-  if (web_interface->WebServer.hasArg("plain") || web_interface->WebServer.hasArg("commandText")) {
-    if (web_interface->WebServer.hasArg("plain")) cmd = web_interface->WebServer.arg("plain");
-    else cmd = web_interface->WebServer.arg("commandText");
-    LOG("Web Command:")
-    LOG(cmd)
-    LOG("\r\n")
-  } else {
-    LOG("invalid argument\r\n")
-    web_interface->WebServer.send(200, "text/plain", "Invalid command");
-    return;
-  }
-  //if it is for ESP module [ESPXXX]<parameter>
-  cmd.trim();
-  int ESPpos = cmd.indexOf("[ESP");
-  if (ESPpos > -1) {
-    //is there the second part?
-    int ESPpos2 = cmd.indexOf("]", ESPpos);
-    if (ESPpos2 > -1) {
-      //Split in command and parameters
-      String cmd_part1 = cmd.substring(ESPpos + 4, ESPpos2);
-      String cmd_part2 = "";
-      //is there space for parameters?
-      if (ESPpos2 < cmd.length()) {
-        cmd_part2 = cmd.substring(ESPpos2 + 1);
-      }
-      //if command is a valid number then execute command
-      if (cmd_part1.toInt() != 0) {
-        //                    COMMAND::execute_command(cmd_part1.toInt(),cmd_part2,WEB_PIPE);
-        BRIDGE::flush(WEB_PIPE);
-      }
-      //if not is not a valid [ESPXXX] command
-    }
-  } else {
-    //send command to serial as no need to transfer ESP command
-    //to avoid any pollution if Uploading file to SDCard
-    if ((web_interface->blockserial) == false) {
-      //block every query
-      web_interface->blockserial = true;
-      LOG("Block Serial\r\n")
-      //empty the serial buffer and incoming data
-      LOG("Start PurgeSerial\r\n")
-      if (Serial.available()) {
-        BRIDGE::processFromSerial2TCP();
-        delay(1);
-      }
-      LOG("End PurgeSerial\r\n")
-      web_interface->WebServer.setContentLength(CONTENT_LENGTH_UNKNOWN);
-      web_interface->WebServer.sendHeader("Content-Type", "text/plain", true);
-      web_interface->WebServer.sendHeader("Cache-Control", "no-cache");
-      web_interface->WebServer.send(200);
-      //send command
-      LOG(String(cmd.length()))
-      LOG("Start PurgeSerial\r\n")
-      if (Serial.available()) {
-        BRIDGE::processFromSerial2TCP();
-        delay(1);
-      }
-      LOG("End PurgeSerial\r\n")
-      LOG("Send Command\r\n")
-      Serial.println(cmd);
-      count = 0;
-      String current_buffer;
-      String current_line;
-      int pos;
-      int temp_counter = 0;
-      String tmp;
-      bool datasent = false;
-      //pickup the list
-      while (count < MAX_TRY) {
-        //give some time between each buffer
-        if (Serial.available()) {
-          count = 0;
-          size_t len = Serial.available();
-          uint8_t sbuf[len + 1];
-          //read buffer
-          Serial.readBytes(sbuf, len);
-          //change buffer as string
-          sbuf[len] = '\0';
-          //add buffer to current one if any
-          current_buffer += (char * ) sbuf;
-          while (current_buffer.indexOf("\n") != -1) {
-            //remove the possible "\r"
-            current_buffer.replace("\r", "");
-            pos = current_buffer.indexOf("\n");
-            //get line
-            current_line = current_buffer.substring(0, current_buffer.indexOf("\n"));
-            //if line is command ack - just exit so save the time out period
-            if ((current_line == "ok") || (current_line == "wait"))
-            {
-              count = MAX_TRY;
-              LOG("Found ok\r\n")
-              break;
-            }
-            //get the line and transmit it
-            LOG("Check command: ")
-            LOG(current_line)
-            LOG("\r\n")
-            //check command
-#if ((FIRMWARE_TARGET == REPETIER) || (FIRMWARE_TARGET == REPETIER4DV))
-            //save time no need to continue
-            if (current_line.indexOf("busy:") > -1) {
-              temp_counter++;
-            }
-            else
-#endif
-              //                            if (COMMAND::check_command(current_line, NO_PIPE, false)) temp_counter ++ ;
-              if (temp_counter > 5)break;
-#if ((FIRMWARE_TARGET == REPETIER) || (FIRMWARE_TARGET == REPETIER4DV))
-            if (!current_line.startsWith( "ok "))
-#endif
-            {
-              buffer2send += current_line;
-              buffer2send += "\n";
-            }
-            if (buffer2send.length() > 1200) {
-              web_interface->WebServer.sendContent(buffer2send);
-              buffer2send = "";
-              datasent = true;
-            }
-            //current remove line from buffer
-            tmp = current_buffer.substring(current_buffer.indexOf("\n") + 1, current_buffer.length());
-            current_buffer = tmp;
-            delay(0);
-          }
-          delay (0);
-        } else delay(1);
-        //it is sending too many temp status should be heating so let's exit the loop
-        if (temp_counter > 5)count = MAX_TRY;
-        count++;
-      }
-      //to be sure connection close
-      if (buffer2send.length() > 0) {
-        web_interface->WebServer.sendContent(buffer2send);
-        datasent = true;
-      }
-      if (!datasent)web_interface->WebServer.sendContent(" \r\n");
-      web_interface->WebServer.sendContent("");
-      LOG("Start PurgeSerial\r\n")
-      //                if(Serial.available()){
-      //                    BRIDGE::processFromSerial2TCP();
-      //                    delay(1);
-      //                    }
-      LOG("End PurgeSerial\r\n")
-      web_interface->blockserial = false;
-      LOG("Release Serial\r\n")
-    }
-    else web_interface->WebServer.send(200, "text/plain", "Serial is busy, retry later!");
-  }
-}
 
 #ifdef SSDP_FEATURE
 void handle_SSDP()
@@ -3905,8 +3652,8 @@ WEBINTERFACE_CLASS::WEBINTERFACE_CLASS (int port): WebServer(port)
   WebServer.on("/SPIFFS", HTTP_ANY, handle_web_spiffs);
   WebServer.on("/SDFS", HTTP_ANY, handle_web_sdfs);
 //  WebServer.on("/PRINTER", HTTP_ANY, handle_web_interface_printer);
-  WebServer.on("/command", HTTP_ANY, handle_web_command);
-  WebServer.on("/command_silent", HTTP_ANY, handle_web_command_silent);
+//  WebServer.on("/command", HTTP_ANY, handle_web_command);
+//  WebServer.on("/command_silent", HTTP_ANY, handle_web_command_silent);
   WebServer.on("/RESTART", HTTP_GET, handle_restart);
 #ifdef WEB_UPDATE_FEATURE
   WebServer.on("/UPDATE", HTTP_ANY, handleUpdate, WebUpdateUpload);
