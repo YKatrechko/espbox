@@ -39,6 +39,10 @@ DNSServer dnsServer;
 
 char *letters = "abcdefghijklmnopqrstuvwxyz0123456789";
 unsigned long previousMillis;
+unsigned long previous_millis_high = 0;
+uint32_t modeMSPRequests;
+uint32_t queuedMSPRequests;
+
 
 void setup()
 {
@@ -176,10 +180,9 @@ void setup()
 void loop()
 {
 #ifdef MSP_LOG_FEATURE
-
-
+  proccess_msp();
 #endif
-  
+
 #ifdef CAPTIVE_PORTAL_FEATURE
   if (WiFi.getMode() != WIFI_STA ) {
     dnsServer.processNextRequest();
@@ -206,12 +209,12 @@ void loop()
     randString += " - ";
     randString += String(currentMillis);
 
-    LOG("Write randString \"")
-    LOG(randString)
-    LOG("\"\r\n")
-    
-    SDCARD::append_file("/logs/logfile.txt", randString);
+    //    LOG("Write randString \"")
+    //    LOG(randString)
+    //    LOG("\"\r\n")
+
+   // SDCARD::append_file("/logs/logfile.txt", randString);
     previousMillis = currentMillis;
   }
-  
+
 }

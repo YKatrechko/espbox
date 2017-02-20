@@ -10,9 +10,7 @@ flags;
 
 
 
-uint16_t  MwSensorPresent = 0;
-uint32_t  MwSensorActive = 0;
-
+  
 //////////////////////////////////////////////////////////////////////////////
 // MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation & current setting number
 typedef  struct {
@@ -156,4 +154,31 @@ PROGMEM const uint8_t EEPROM_DEFAULT[EEPROM_SETTINGS] = {
 };
 
 uint8_t  Settings[EEPROM_SETTINGS];
+
+
+// ---------------------------------------------------------------------------------------
+// Defines imported from Multiwii Serial Protocol MultiWii_shared svn r1337
+#define MSP_VERSION              0
+
+//to multiwii developpers/committers : do not add new MSP messages without a proper argumentation/agreement on the forum
+#define MSP_IDENT                100   //out message         multitype + multiwii version + protocol version + capability variable
+#define MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation & current setting number
+#define MSP_RAW_IMU              102   //out message         9 DOF
+#define MSP_RAW_GPS              106   //out message         fix, numsat, lat, lon, alt, speed, ground course
+#define MSP_COMP_GPS             107   //out message         distance home, direction home
+#define MSP_ATTITUDE             108   //out message         2 angles 1 heading
+#define MSP_ALTITUDE             109   //out message         altitude, variometer
+#define MSP_ANALOG               110   //out message         vbat, powermetersum, rssi if available on RX
+
+#define MSP_DEBUG                254   //out message         debug1,debug2,debug3,debug4
+
+// End of imported defines from Multiwii Serial Protocol MultiWii_shared svn r1333
+// ---------------------------------------------------------------------------------------
+
+
+uint16_t  MwSensorPresent = 0;
+uint32_t  MwSensorActive = 0;
+#define hi_speed_cycle  500  // updates everything approx 1.3 times per second
+
+
 

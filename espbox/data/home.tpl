@@ -1,7 +1,9 @@
 $INCLUDE[header.inc]$
 <div class="panel">
 <div class="panel-heading">System</div>
-<div class="panel-body"><label>Chip ID: </label><label class="text-info">$CHIP_ID$</label><BR>
+<div class="panel-body">
+<label>Uptime: </label><label class="text-info" id="uptime">00:00:00</label><BR>
+<label>Chip ID: </label><label class="text-info">$CHIP_ID$</label><BR>
 <label>CPU Frequency: </label><label class="text-info">$CPU_FREQ$ MHz</label><BR>
 <label>Free Memory: </label><label class="text-info">$FREE_MEM$ bytes</label><BR>
 <label>SDK Version: </label><label class="text-info">$SDK_VER$</label><BR>
@@ -51,5 +53,29 @@ $INCLUDE[header.inc]$
 </div>
 </div>
 </div>
+<script type="text/javascript">
+    window.onload = function() {
+        if ($REFRESH_PAGE$) {
+            setInterval(function() {
+                getstatus();
+            }, $REFRESH_PAGE$);
+        }
+    }
+
+    function getstatus() {
+        var xmlhttp = new XMLHttpRequest();
+        var url = "http://$WEB_ADDRESS$/UPTIME";
+        xmlhttp.onreadystatechange = function() {
+            if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+                var jsonresponse = JSON.parse(xmlhttp.responseText);
+                document.getElementById("uptime").innerHTML = jsonresponse.uptime;
+
+            }
+
+        }
+        xmlhttp.open("GET", url, true);
+        xmlhttp.send();
+    }
+</script>
 $INCLUDE[footer.inc]$
 

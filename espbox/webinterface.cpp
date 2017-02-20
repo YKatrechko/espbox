@@ -472,9 +472,7 @@ bool WEBINTERFACE_CLASS::processTemplate(const char  * filename, STORESTRINGS_CL
 // -----------------------------------------------------------------------------
 void WEBINTERFACE_CLASS::GetFreeMem(STORESTRINGS_CLASS & KeysList, STORESTRINGS_CLASS & ValuesList)
 {
-  //FreeMem
-  KeysList.add(FPSTR(KEY_FREE_MEM));
-  ValuesList.add(CONFIG::intTostr(ESP.getFreeHeap()));
+  //
   //FW Version
   KeysList.add(FPSTR(KEY_FW_VER));
   ValuesList.add(FPSTR(VALUE_FW_VERSION));
@@ -712,6 +710,17 @@ void handle_web_interface_home()
 
   //IP+Web
   web_interface->GetIpWeb(KeysList, ValuesList);
+
+  byte irefresh_page;
+  if (!CONFIG::read_byte(EP_REFRESH_PAGE_TIME, &irefresh_page )) {
+    irefresh_page = DEFAULT_REFRESH_PAGE_TIME;
+  }
+  KeysList.add(FPSTR(KEY_REFRESH_PAGE));
+  ValuesList.add(CONFIG::intTostr(irefresh_page));
+
+  //FreeMem
+  KeysList.add(FPSTR(KEY_FREE_MEM));
+  ValuesList.add(CONFIG::intTostr(ESP.getFreeHeap()));
 
   //Hostname
   if (WiFi.getMode() == WIFI_STA ) {
@@ -3437,6 +3446,42 @@ void handle_not_found()
   }
 }
 
+
+
+void handle_web_interface_uptime()
+{
+  //we do not care if need authentication - just reset counter
+  web_interface->is_authenticated();
+  static int Rollover = 0;
+  static int HighMillis = 0;
+
+  //** Making Note of an expected rollover *****//
+  if (millis() >= 3000000000) {
+    HighMillis = 1;
+  }
+  //** Making note of actual rollover **//
+  if (millis() <= 100000 && HighMillis == 1) {
+    Rollover++;
+    HighMillis = 0;
+  }
+
+  String buffer2send;
+  char value_buff[14];
+  long secsUp = millis() / 1000;
+  int  Second = secsUp % 60;
+  int  Minute = (secsUp / 60) % 60;
+  int  Hour = (secsUp / (60 * 60)) % 24;
+  int  Day = (Rollover * 50) + (secsUp / (60 * 60 * 24)); //First portion takes care of a rollover [around 50 days]
+  sprintf_P(value_buff, (const char *)F("%dd %02d:%02d:%02d"), Day, Hour, Minute, Second);
+
+  //start JSON answer
+  buffer2send = "{";
+  buffer2send += "\"uptime\":\"" + String(value_buff) + "\"";
+  buffer2send += "}";
+  web_interface->WebServer.sendHeader("Cache-Control", "no-cache");
+  web_interface->WebServer.send(200, "application/json", buffer2send);
+}
+
 #ifdef AUTHENTICATION_FEATURE
 void handle_login()
 {
@@ -3648,12 +3693,13 @@ WEBINTERFACE_CLASS::WEBINTERFACE_CLASS (int port): WebServer(port)
   WebServer.on("/CONFIGAP", HTTP_ANY, handle_web_interface_configAP);
   WebServer.on("/CONFIGSTA", HTTP_ANY, handle_web_interface_configSTA);
   WebServer.on("/STATUS", HTTP_ANY, handle_web_interface_status);
+  WebServer.on("/UPTIME", HTTP_ANY, handle_web_interface_uptime);
   WebServer.on("/SETTINGS", HTTP_ANY, handle_web_settings);
   WebServer.on("/SPIFFS", HTTP_ANY, handle_web_spiffs);
   WebServer.on("/SDFS", HTTP_ANY, handle_web_sdfs);
-//  WebServer.on("/PRINTER", HTTP_ANY, handle_web_interface_printer);
-//  WebServer.on("/command", HTTP_ANY, handle_web_command);
-//  WebServer.on("/command_silent", HTTP_ANY, handle_web_command_silent);
+  //  WebServer.on("/PRINTER", HTTP_ANY, handle_web_interface_printer);
+  //  WebServer.on("/command", HTTP_ANY, handle_web_command);
+  //  WebServer.on("/command_silent", HTTP_ANY, handle_web_command_silent);
   WebServer.on("/RESTART", HTTP_GET, handle_restart);
 #ifdef WEB_UPDATE_FEATURE
   WebServer.on("/UPDATE", HTTP_ANY, handleUpdate, WebUpdateUpload);

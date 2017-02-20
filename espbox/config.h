@@ -52,8 +52,7 @@
 //SERIAL_COMMAND_FEATURE: allow to send command by serial
 //#define SERIAL_COMMAND_FEATURE
 
-//TCP_IP_DATA_FEATURE: allow to connect serial from TCP/IP
-//#define TCP_IP_DATA_FEATURE
+#define MSP_LOG_FEATURE
 
 //RECOVERY_FEATURE: allow to use GPIO2 pin as hardware reset for EEPROM, add 8s to boot time to let user to jump GPIO2 to GND
 //#define RECOVERY_FEATURE
