@@ -1,8 +1,6 @@
 # ESPBox
 
 Firmware for ESP8266/ESP8285 used as SD card logger using [arduino core version](https://github.com/esp8266/Arduino)   
-This firmware allows not only to have a cheap bridge between Wifi and serial, but also to have a web UI to configure wifi, to monitor 3D printer and even control it, and to make things easy,
-UI is fully customizable without reflashing FW.
 
 <u>Development version:</u>    
 Arduino ide 1.8.0 with git from ESP8266 : [![Build Status](https://travis-ci.org/luc-github/ESP3D.svg?branch=master)](https://travis-ci.org/luc-github/ESP3D)    
@@ -18,7 +16,7 @@ Because SPIFFS is flat filesystem, no directory management is necessary, so it i
 *IP Generation: DHCP/Static IP      
 *IP/MASK/GATEWAY for static data    
 *Baud Rate for serial (supported : 9600, 19200, 38400, 57600, 115200, 230400, 250000)    
-*web port and data port      
+*web port
 
     
 ##Default Configuration      
@@ -36,7 +34,6 @@ Mask: 255.255.255.0
 GW:192.168.0.1    
 Baud rate: 9600   
 Web port:80   
-Data port: 8888     
 Web Page refresh: 3 secondes    
 User: admin   
 Password: admin   
