@@ -29,7 +29,6 @@
 #include <ESP8266WebServer.h>
 #include "GenLinkedList.h"
 #include "storestrings.h"
-///#include "command.h"
 #include "bridge.h"
 
 #ifdef SDCARD_FEATURE
@@ -3446,8 +3445,6 @@ void handle_not_found()
   }
 }
 
-
-
 void handle_web_interface_uptime()
 {
   //we do not care if need authentication - just reset counter
@@ -3697,9 +3694,6 @@ WEBINTERFACE_CLASS::WEBINTERFACE_CLASS (int port): WebServer(port)
   WebServer.on("/SETTINGS", HTTP_ANY, handle_web_settings);
   WebServer.on("/SPIFFS", HTTP_ANY, handle_web_spiffs);
   WebServer.on("/SDFS", HTTP_ANY, handle_web_sdfs);
-  //  WebServer.on("/PRINTER", HTTP_ANY, handle_web_interface_printer);
-  //  WebServer.on("/command", HTTP_ANY, handle_web_command);
-  //  WebServer.on("/command_silent", HTTP_ANY, handle_web_command_silent);
   WebServer.on("/RESTART", HTTP_GET, handle_restart);
 #ifdef WEB_UPDATE_FEATURE
   WebServer.on("/UPDATE", HTTP_ANY, handleUpdate, WebUpdateUpload);
@@ -3722,19 +3716,6 @@ WEBINTERFACE_CLASS::WEBINTERFACE_CLASS (int port): WebServer(port)
   WebServer.on("/description.xml", HTTP_GET, handle_SSDP);
 #endif
   WebServer.onNotFound( handle_not_found);
-#ifdef TEMP_MONITORING_FEATURE
-  answer4M105 = "T:0 /0 ";
-  last_temp = millis();
-#endif
-#ifdef POS_MONITORING_FEATURE
-  answer4M114 = "X:0.0 Y:0.0 Z:0.000";
-#endif
-#ifdef SPEED_MONITORING_FEATURE
-  answer4M220 = "100";
-#endif
-#ifdef FLOW_MONITORING_FEATURE
-  answer4M221 = "100";
-#endif
   blockserial = false;
   restartmodule = false;
   //rolling list of 4entries with a maximum of 50 char for each entry
@@ -3901,6 +3882,8 @@ String WEBINTERFACE_CLASS::getContentType(String filename)
   } else if (filename.endsWith(".tpl")) {
     return "text/plain";
   } else if (filename.endsWith(".inc")) {
+    return "text/plain";
+  } else if (filename.endsWith(".log")) {
     return "text/plain";
   } else if (filename.endsWith(".txt")) {
     return "text/plain";
