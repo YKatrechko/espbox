@@ -311,4 +311,69 @@ void setMspRequests() {
 }
 
 
+/*
+void TinyGPSTime::setTime(const char *term){
+   newTime = (uint32_t)TinyGPSPlus::parseDecimal(term);
+}
+void TinyGPSDate::setDate(const char *term){
+   newDate = atol(term);
+}
+uint16_t TinyGPSDate::year(){
+   updated = false;
+   uint16_t year = date % 100;
+   return year + 2000;
+}
+uint8_t TinyGPSDate::month(){
+   updated = false;
+   return (date / 100) % 100;
+}
+uint8_t TinyGPSDate::day(){
+   updated = false;
+   return date / 10000;
+}
+uint8_t TinyGPSTime::hour(){
+   updated = false;
+   return time / 1000000;
+}
+uint8_t TinyGPSTime::minute(){
+   updated = false;
+   return (time / 10000) % 100;
+}
+uint8_t TinyGPSTime::second(){
+   updated = false;
+   return (time / 100) % 100;
+}
+--
+void TinyGPS::crack_datetime(int *year, byte *month, byte *day, 
+  byte *hour, byte *minute, byte *second, byte *hundredths, unsigned long *age)
+{
+  unsigned long date, time;
+  get_datetime(&date, &time, age);
+  if (year) 
+  {
+    *year = date % 100;
+    *year += *year > 80 ? 1900 : 2000;
+  }
+  if (month) *month = (date / 100) % 100;
+  if (day) *day = date / 10000;
+  if (hour) *hour = time / 1000000;
+  if (minute) *minute = (time / 10000) % 100;
+  if (second) *second = (time / 100) % 100;
+  if (hundredths) *hundredths = time % 100;
+}
+
+        case _GPS_SENTENCE_GPRMC:
+          _time      = _new_time;
+          _date      = _new_date;
+          _latitude  = _new_latitude;
+          _longitude = _new_longitude;
+          _speed     = _new_speed;
+          _course    = _new_course;
+          break;
+        case _GPS_SENTENCE_GPGGA:
+          _altitude  = _new_altitude;
+          _time      = _new_time;
+
+*/
+
 #endif
