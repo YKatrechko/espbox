@@ -32,14 +32,14 @@ typedef  struct {
   int32_t lat, lon;
   int16_t alt;
   uint16_t speed, gcourse;
-} msp_raw_gps_t;
+} raw_gps_t;
 
 // MSP_COMP_GPS             107   //out message         distance home, direction home
 typedef  struct {
   uint16_t distoHome;
   int16_t dirtoHome;
   uint8_t upd;
-} msp_comp_gps_t;
+} comp_gps_t;
 
 // MSP_ALTITUDE             109   //out message         altitude, variometer
 typedef struct {
@@ -65,6 +65,13 @@ typedef struct {
   int16_t  debug[4];
 } debug_t;
 
+// MSP_TIME_GPS             99   //out message         gps_time
+typedef struct {
+  uint32_t  date;
+  uint32_t  time;
+} time_gps_t;
+
+
 struct {
   status_t status;              // 101
   // imu_t imu;                 // 102
@@ -85,6 +92,7 @@ struct {
 #define REQ_MSP_RAW_GPS   (1 <<  5)
 #define REQ_MSP_ANALOG    (1 <<  6)
 #define REQ_MSP_DEBUG     (1 <<  7)
+#define REQ_MSP_TIME_GPS  (1 <<  8)
 
 // Settings Locations
 enum Setting_ {
