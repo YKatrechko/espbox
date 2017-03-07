@@ -10,7 +10,7 @@ flags;
 
 
 
-  
+
 //////////////////////////////////////////////////////////////////////////////
 // MSP_STATUS               101   //out message         cycletime & errors_count & sensor present & box activation & current setting number
 typedef  struct {
@@ -67,8 +67,16 @@ typedef struct {
 
 // MSP_TIME_GPS             99   //out message         gps_time
 typedef struct {
-  uint32_t  date;
-  uint32_t  time;
+  uint32_t  date;  // value
+  uint32_t  time;  // value
+
+  uint16_t year();
+  uint8_t month();
+  uint8_t day();
+  uint8_t hour();
+  uint8_t minute();
+  uint8_t second();
+
 } time_gps_t;
 
 
