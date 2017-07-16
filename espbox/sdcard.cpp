@@ -26,7 +26,7 @@
 #include <SPI.h>
 #include <SdFat.h>
 
-const uint8_t SD_CHIP_SELECT = SS;
+const uint8_t SD_CHIP_SELECT = SS; // D8   GPIO 15;
 #endif
 
 //String SDCARD::buffer_serial;
@@ -52,7 +52,7 @@ void SDCARD::initSD()
 
 String SDCARD::cardInfo()
 {
-  String sdinfo = "Error";
+  String sdinfo = "Error SDcard Info";
   if (_sdinit) {
     String sdtype;
     uint32_t cardSize = sd.card()->cardSize();
