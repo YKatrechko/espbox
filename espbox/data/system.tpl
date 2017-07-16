@@ -4,6 +4,8 @@ $INCLUDE[css2.inc]$
 <div class="panel-heading">System</div>
 <div class="panel-body">
 <form method="POST">
+<div class="form-group $REFRESH_PAGE_STATUS$"><label class="control-label" for="CONFIG0">Refresh page time: </label><br>
+<input type="number" class="form-control" id="CONFIG0" name="REFRESH_PAGE" placeholder="Time in minutes 0~120, 0 = disabled " value="$REFRESH_PAGE$"  min="0"max="120"   step="1"style="width: auto;"></div>
 <div class="form-group $BAUD_RATE_STATUS$">
 <label class="control-label" for="CONFIG1" >Baud rate</label><br>
 <select name="BAUD_RATE" id="CONFIG1" class="form-control">

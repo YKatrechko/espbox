@@ -7,8 +7,6 @@ $INCLUDE[css2.inc]$
 <div class="panel-heading">Extra Settings</div>
 <div class="panel-body">
 <form method="POST">
-<div class="form-group $REFRESH_PAGE_STATUS$"><label class="control-label" for="CONFIG1">Refresh page time: </label><br>
-<input type="number" class="form-control" id="CONFIG1" name="REFRESH_PAGE" placeholder="Time in minutes 0~120, 0 = disabled " value="$REFRESH_PAGE$"  min="0"max="120"   step="1"style="width: auto;"></div>
 <div class="form-group $XY_FEEDRATE_STATUS$"><label class="control-label" for="CONFIG2">XY axis feedrate: </label><br>
 <input type="number" class="form-control" id="CONFIG2" name="XY_FEEDRATE" placeholder="1~9999 " value="$XY_FEEDRATE$"  min="1"max="9999"   step="1"style="width: auto;"></div>
 <div class="form-group $Z_FEEDRATE_STATUS$"><label class="control-label" for="CONFIG3">Z axis feedrate: </label><br>

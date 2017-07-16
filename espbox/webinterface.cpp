@@ -1070,6 +1070,7 @@ void handle_web_interface_configSys()
   //long lstatus;
   int istatus;
   //byte bbuf;
+  byte irefresh_page;
   long ibaud = DEFAULT_BAUD_RATE;
   int iweb_port = DEFAULT_WEB_PORT;
   int idata_port = DEFAULT_DATA_PORT;
@@ -1110,9 +1111,11 @@ void handle_web_interface_configSys()
   if (web_interface->WebServer.hasArg("SUBMIT")) {
     //is there a correct list of values?
     if (web_interface->WebServer.hasArg("BAUD_RATE")
+        && web_interface->WebServer.hasArg("REFRESH_PAGE")
         && web_interface->WebServer.hasArg("SLEEP_MODE")
         && web_interface->WebServer.hasArg("WEBPORT")) {
       //is each value correct ?
+      irefresh_page  = web_interface->WebServer.arg("REFRESH_PAGE").toInt();
       ibaud  = web_interface->WebServer.arg("BAUD_RATE").toInt();
       iweb_port  = web_interface->WebServer.arg("WEBPORT").toInt();
       bsleepmode = web_interface->WebServer.arg("SLEEP_MODE").toInt();
@@ -1138,6 +1141,14 @@ void handle_web_interface_configSys()
         KeysList.add(FPSTR(KEY_BAUD_RATE_STATUS));
         ValuesList.add(FPSTR(VALUE_HAS_ERROR));
       }
+
+      if (!(irefresh_page >= 0 && irefresh_page < 120)) {
+        msg_alert_error = true;
+        smsg.concat(F("Error: invalid value for refresh time<BR>"));
+        KeysList.add(FPSTR(KEY_REFRESH_PAGE_STATUS));
+        ValuesList.add(FPSTR(VALUE_HAS_ERROR));
+      }
+
       if (!(bsleepmode == WIFI_NONE_SLEEP || bsleepmode == WIFI_LIGHT_SLEEP || bsleepmode == WIFI_MODEM_SLEEP )) {
         msg_alert_error = true;
         smsg.concat(F("Error: value for sleeping mode is not correct<BR>"));
@@ -1151,6 +1162,7 @@ void handle_web_interface_configSys()
     //if no error apply the changes
     if (msg_alert_error != true) {
       if (!CONFIG::write_buffer(EP_BAUD_RATE, (const byte *)&ibaud, INTEGER_LENGTH)
+          || !CONFIG::write_byte(EP_REFRESH_PAGE_TIME, irefresh_page)
           || !CONFIG::write_buffer(EP_WEB_PORT, (const byte *)&iweb_port, INTEGER_LENGTH)
           || !CONFIG::write_byte(EP_SLEEP_MODE, bsleepmode)) {
         msg_alert_error = true;
@@ -1161,9 +1173,12 @@ void handle_web_interface_configSys()
         smsg = F("Changes saved to EEPROM, restarting....");
       }
     }
-  } else { //no submit need to get data from EEPROM
+  } else { //no submit, need to get data from EEPROM
     if (!CONFIG::read_buffer(EP_BAUD_RATE,  (byte *)&ibaud , INTEGER_LENGTH)) {
       ibaud = DEFAULT_BAUD_RATE;
+    }
+    if (!CONFIG::read_byte(EP_REFRESH_PAGE_TIME, &irefresh_page )) {
+      irefresh_page = DEFAULT_REFRESH_PAGE_TIME;
     }
     if (!CONFIG::read_byte(EP_SLEEP_MODE, &bsleepmode )) {
       bsleepmode = DEFAULT_SLEEP_MODE;
@@ -1210,6 +1225,11 @@ void handle_web_interface_configSys()
   }
   KeysList.add(FPSTR(KEY_BAUD_RATE_OPTIONS_LIST));
   ValuesList.add(stmp);
+  
+  //refresh page
+  KeysList.add(FPSTR(KEY_REFRESH_PAGE));
+  ValuesList.add(CONFIG::intTostr(irefresh_page));
+  
   //Sleep Mode
   istatus = 0;
   stmp = "";
@@ -1253,6 +1273,8 @@ void handle_web_interface_configSys()
     if (!outputjson) {
       KeysList.add(FPSTR(KEY_SERVICE_PAGE));
       ValuesList.add(FPSTR(RESTARTCMD));
+      KeysList.add(FPSTR(KEY_REFRESH_PAGE_STATUS));
+      ValuesList.add(FPSTR(VALUE_HAS_SUCCESS));
       KeysList.add(FPSTR(KEY_BAUD_RATE_STATUS));
       ValuesList.add(FPSTR(VALUE_HAS_SUCCESS));
       KeysList.add(FPSTR(KEY_SLEEP_MODE_STATUS));
@@ -2241,7 +2263,7 @@ void handle_web_interface_configSTA()
   ValuesList.clear();
 }
 
-void handle_web_settings()
+void handle_web_extra_settings()
 {
   static const char NOT_AUTH_SET [] PROGMEM = "HTTP/1.1 301 OK\r\nLocation: /LOGIN?return=SETTINGS\r\nCache-Control: no-cache\r\n\r\n";
   bool outputjson = false;
@@ -2250,7 +2272,6 @@ void handle_web_settings()
   //byte bbuf;
   bool msg_alert_error = false;
   bool msg_alert_success = false;
-  byte irefresh_page;
   int ixy_feedrate, iz_feedrate, ie_feedrate;
   STORESTRINGS_CLASS KeysList ;
   STORESTRINGS_CLASS ValuesList ;
@@ -2275,19 +2296,12 @@ void handle_web_settings()
   //check is it is a submission or a display
   if (web_interface->WebServer.hasArg("SUBMIT")) {
     //is there a correct list of values?
-    if (web_interface->WebServer.hasArg("REFRESH_PAGE") && web_interface->WebServer.hasArg("XY_FEEDRATE") && web_interface->WebServer.hasArg("Z_FEEDRATE") && web_interface->WebServer.hasArg("E_FEEDRATE")) {
+    if (web_interface->WebServer.hasArg("XY_FEEDRATE") && web_interface->WebServer.hasArg("Z_FEEDRATE") && web_interface->WebServer.hasArg("E_FEEDRATE")) {
       //is each value correct ?
-      irefresh_page  = web_interface->WebServer.arg("REFRESH_PAGE").toInt();
       ixy_feedrate  = web_interface->WebServer.arg("XY_FEEDRATE").toInt();
       iz_feedrate  = web_interface->WebServer.arg("Z_FEEDRATE").toInt();
       ie_feedrate = web_interface->WebServer.arg("E_FEEDRATE").toInt();
 
-      if (!(irefresh_page >= 0 && irefresh_page < 120)) {
-        msg_alert_error = true;
-        smsg.concat(F("Error: invalid value for refresh time<BR>"));
-        KeysList.add(FPSTR(KEY_REFRESH_PAGE_STATUS));
-        ValuesList.add(FPSTR(VALUE_HAS_ERROR));
-      }
       if (!(ixy_feedrate > 0 && ixy_feedrate < 9999)) {
         msg_alert_error = true;
         smsg.concat(F("Error: invalid value for XY axis feedrate<BR>"));
@@ -2312,7 +2326,9 @@ void handle_web_settings()
     }
     //if no error apply the changes
     if (msg_alert_error != true) {
-      if (!CONFIG::write_buffer(EP_XY_FEEDRATE, (const byte *)&ixy_feedrate, INTEGER_LENGTH) || !CONFIG::write_buffer(EP_Z_FEEDRATE, (const byte *)&iz_feedrate, INTEGER_LENGTH) || !CONFIG::write_buffer(EP_E_FEEDRATE, (const byte *)&ie_feedrate, INTEGER_LENGTH) || !CONFIG::write_byte(EP_REFRESH_PAGE_TIME, irefresh_page)) {
+      if (!CONFIG::write_buffer(EP_XY_FEEDRATE, (const byte *)&ixy_feedrate, INTEGER_LENGTH) 
+       || !CONFIG::write_buffer(EP_Z_FEEDRATE, (const byte *)&iz_feedrate, INTEGER_LENGTH) 
+       || !CONFIG::write_buffer(EP_E_FEEDRATE, (const byte *)&ie_feedrate, INTEGER_LENGTH)) {
         msg_alert_error = true;
         smsg = FPSTR(EEPROM_NOWRITE);
       } else {
@@ -2324,9 +2340,6 @@ void handle_web_settings()
     if (!CONFIG::read_buffer(EP_XY_FEEDRATE,  (byte *)&ixy_feedrate , INTEGER_LENGTH)) {
       ixy_feedrate = DEFAULT_XY_FEEDRATE;
     }
-    if (!CONFIG::read_byte(EP_REFRESH_PAGE_TIME, &irefresh_page )) {
-      irefresh_page = DEFAULT_REFRESH_PAGE_TIME;
-    }
     if (!CONFIG::read_buffer(EP_Z_FEEDRATE,  (byte *)&iz_feedrate , INTEGER_LENGTH)) {
       iz_feedrate = DEFAULT_Z_FEEDRATE;
     }
@@ -2335,9 +2348,6 @@ void handle_web_settings()
     }
   }
   //fill the variables
-  //refresh page
-  KeysList.add(FPSTR(KEY_REFRESH_PAGE));
-  ValuesList.add(CONFIG::intTostr(irefresh_page));
   //xy feedrate
   KeysList.add(FPSTR(KEY_XY_FEEDRATE));
   ValuesList.add(CONFIG::intTostr(ixy_feedrate));
@@ -2355,8 +2365,6 @@ void handle_web_settings()
       web_interface->ProcessAlertSuccess(KeysList, ValuesList, smsg, !outputjson);
       KeysList.add(FPSTR(KEY_SERVICE_PAGE));
       ValuesList.add("");
-      KeysList.add(FPSTR(KEY_REFRESH_PAGE_STATUS));
-      ValuesList.add(FPSTR(VALUE_HAS_SUCCESS));
       KeysList.add(FPSTR(KEY_XY_FEEDRATE_STATUS));
       ValuesList.add(FPSTR(VALUE_HAS_SUCCESS));
       KeysList.add(FPSTR(KEY_Z_FEEDRATE_STATUS));
@@ -3693,7 +3701,7 @@ WEBINTERFACE_CLASS::WEBINTERFACE_CLASS (int port): WebServer(port)
   WebServer.on("/CONFIGSTA", HTTP_ANY, handle_web_interface_configSTA);
   WebServer.on("/STATUS", HTTP_ANY, handle_web_interface_status);
   WebServer.on("/UPTIME", HTTP_ANY, handle_web_interface_uptime);
-  WebServer.on("/SETTINGS", HTTP_ANY, handle_web_settings);
+  WebServer.on("/SETTINGS", HTTP_ANY, handle_web_extra_settings);
   WebServer.on("/SPIFFS", HTTP_ANY, handle_web_spiffs);
   WebServer.on("/SDFS", HTTP_ANY, handle_web_sdfs);
   WebServer.on("/RESTART", HTTP_GET, handle_restart);
