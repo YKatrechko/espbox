@@ -3682,6 +3682,16 @@ void handle_restart()
   web_interface->restartmodule = true;
 }
 
+void handle_info(){
+    STORESTRINGS_CLASS KeysList;
+    STORESTRINGS_CLASS ValuesList;
+    web_interface->GetFreeMem(KeysList, ValuesList);
+    web_interface->GetLogin(KeysList, ValuesList,web_interface->is_authenticated(), true);
+    web_interface->generateJSON(KeysList, ValuesList);
+    //need to clean to speed up memory recovery
+    KeysList.clear();
+    ValuesList.clear();
+}
 
 #ifdef SSDP_FEATURE
 void handle_SSDP()
@@ -3705,6 +3715,7 @@ WEBINTERFACE_CLASS::WEBINTERFACE_CLASS (int port): WebServer(port)
   WebServer.on("/SPIFFS", HTTP_ANY, handle_web_spiffs);
   WebServer.on("/SDFS", HTTP_ANY, handle_web_sdfs);
   WebServer.on("/RESTART", HTTP_GET, handle_restart);
+  WebServer.on("/INFO", HTTP_ANY, handle_info);
 #ifdef WEB_UPDATE_FEATURE
   WebServer.on("/UPDATE", HTTP_ANY, handleUpdate, WebUpdateUpload);
 #endif
